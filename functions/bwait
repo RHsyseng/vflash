@@ -1,0 +1,58 @@
+#! /bin/bash
+
+
+bwait() {
+
+    local DESCRIPTION="displays a bar that counts seconds"
+    local OPTIONS="(help | seconds_to_count [count to condense] [ones character] [condense character])"
+    local RETURNS=""
+
+    [[ ${1} == help ]] \
+        && {
+            _show_help "${FUNCNAME}" "${DESCRIPTION}" "${OPTIONS}" "${RETURNS}"
+            return 0
+        }
+
+
+    local wtime=$1
+    local condense_step=${2-10}
+    local ones_char=${3-"."}
+    local condense_char=${4-"#"}
+    local t
+    local i
+    local j
+
+    debug_print ${FUNCNAME} empty_array ${wtime}
+
+    for (( t=$1; t> 0; t-- ))
+    do
+        : ${i:=0}
+        printf "%s" ${ones_char}
+        (( i+=1 ))
+        [[ ${i} -eq ${condense_step} ]] \
+            && {
+                i=0
+                for (( j=${condense_step}; j> 0; j-- ))
+                do
+                    printf "\b"
+                done
+
+                printf "%s" ${condense_char}
+
+                for (( j=${condense_step}; j> 0; j-- ))
+                do
+                    printf " "
+                done
+
+                for (( j=${condense_step}; j> 0; j-- ))
+                do
+                    printf "\b"
+                done
+            }
+        sleep 1
+
+    done
+
+    printf "\n"
+}
+

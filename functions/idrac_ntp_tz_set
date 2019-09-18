@@ -1,0 +1,26 @@
+idrac_ntp_tz_set() {
+    local DESCRIPTION="Set the NTP servers on the iDRAC"
+    local OPTIONS="(help | idrac_ip timezone"
+    local RETURNS="Enabled | Disabled"
+
+    [[ ${1} == help ]] \
+        && {
+            _show_help "${FUNCNAME}" "${DESCRIPTION}" "${OPTIONS}" "${RETURNS}"
+            return 0
+        }
+
+
+    local ip=$1
+    local tzone=$2
+
+    local value
+    local cout
+
+    mapfile cout < <(
+       SSHPASS=${idrac_pass} ${ssh_cmd} ${ip} \
+          racadm set idrac.time.timezone ${tzone} \
+          2>&1
+    )
+
+    debug_print ${FUNCNAME} cout
+}

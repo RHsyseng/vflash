@@ -1,0 +1,27 @@
+#! /bin/bash
+
+
+sitnwait () {
+
+    local DESCRIPTION="counts down seconds"
+    local OPTIONS="(help | seconds_to_wait)"
+    local RETURNS=""
+
+    [[ ${1} == help ]] \
+        && {
+            _show_help "${FUNCNAME}" "${DESCRIPTION}" "${OPTIONS}" "${RETURNS}"
+            return 0
+        }
+
+
+    debug_print ${FUNCNAME} empty_array ${1}
+
+    for (( t=$1; t > 0; t-- ))
+    do
+        printf "Waiting: %5ss        \r" ${t}
+        sleep 1
+    done
+
+    printf "                  \r"
+}
+

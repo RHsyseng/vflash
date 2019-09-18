@@ -1,0 +1,34 @@
+job_create() {
+    local DESCRIPTION="Create a job to configure upon reboot"
+    local OPTIONS="(help | idrac_ip idrac_fqdd)"
+    local RETURNS="a job id"
+
+    [[ ${1} == help ]] \
+        && {
+            _show_help "${FUNCNAME}" "${DESCRIPTION}" "${OPTIONS}" "${RETURNS}"
+            return 0
+        }
+
+
+
+    local ip=$1
+    local fqdd=${2,,}
+    local cout
+    local line
+    local jid
+
+    [[ ${2:-x} == x ]] && return 1
+
+    mapfile cout < <(
+        SSHPASS=${idrac_pass} ${ssh_cmd} ${ip} \
+            racadm jobqueue create ${fqdd} \
+            2>&1
+        )
+
+    jid=$( echo "${cout[@]}" | sed -n -e 's/.*Commit JID = \(.*\)\s*$/\1/p' )
+
+    echo ${jid}
+
+    debug_print ${FUNCNAME} cout ${jid}
+
+}

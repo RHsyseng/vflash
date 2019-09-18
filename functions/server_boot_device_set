@@ -1,0 +1,37 @@
+server_boot_device_set() {
+    local DESCRIPTION="Set the system to boot once from the vFlash partition"
+    local OPTIONS="(help | idrac_ipi vflash_partition_name)"
+    local RETURNS="the first boot device"
+
+    [[ ${1} == help ]] \
+        && {
+            _show_help "${FUNCNAME}" "${DESCRIPTION}" "${OPTIONS}" "${RETURNS}"
+            return 0
+        }
+
+
+
+    local ip=$1
+    local partition_name=$2
+    local cout
+    local line
+
+    server_bootonce_set ${ip} enable
+
+    mapfile cout < <(
+        SSHPASS=${idrac_pass} ${ssh_cmd} ${ip} \
+            racadm config \
+                -g cfgServerInfo \
+                -o cfgServerFirstBootDevice ${partition_name} \
+                2>&1
+        )
+
+    debug_print ${FUNCNAME} cout
+
+
+    server_boot_device_state ${ip}
+}
+
+
+
+

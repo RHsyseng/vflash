@@ -1,0 +1,32 @@
+_show_help() {
+
+    local DESCRIPTION="Displays the help for a function"
+    local OPTIONS="function_name 'function_description' 'function_options' 'returns_from_function'"
+    local RETURNS="A usage generated from the input provided"
+
+    [[ $# -ne 4 ]] \
+        && {
+            echo "Requires 4 paramameters, $# given"
+            _show_help "${FUNCNAME[0]}" "${DESCRIPTION}" "${OPTIONS}" "${RETURNS}"
+            return 1
+        }
+
+
+    local fname="$1"
+    local fdesc="$2"
+    local fopts="$3"
+    local fret="$4"
+
+    [[ -n ${fdesc} ]] \
+        && echo "Description:  ${fdesc}"
+
+    [[ ${DASHCMDS+x} == x ]] && fname=${fname//_/-}
+
+    echo "Usage:        ${fname} ${fopts}"
+
+    [[ -n ${fret} ]] \
+        && echo "Returns:      ${fret}"
+
+    echo
+
+}

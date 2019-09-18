@@ -1,0 +1,59 @@
+idrac_ntp_server_set() {
+    local DESCRIPTION="Set the NTP servers on the iDRAC"
+    local OPTIONS="(help | idrac_ip ntp_server1|empty [ntp_server2|empty] [ntp_server3|empty]"
+    local RETURNS="Enabled | Disabled"
+
+    [[ ${1} == help ]] \
+        && {
+            _show_help "${FUNCNAME}" "${DESCRIPTION}" "${OPTIONS}" "${RETURNS}"
+            return 0
+        }
+
+
+    local ip=$1
+    local ntp_server1=$2
+    local ntp_server2=$3
+    local ntp_server3=$4
+
+    [[ ${2,,} =~ empty ]] && ntp_server1='""'
+    [[ ${3,,} =~ empty ]] && ntp_server2='""'
+    [[ ${4,,} =~ empty ]] && ntp_server3='""'
+
+    local value
+    local cout
+    local cout1
+    local cout2
+    local cout3
+
+    [[ ${ntp_server1+x} == x ]] \
+        && {
+            mapfile cout1 < <(
+               SSHPASS=${idrac_pass} ${ssh_cmd} ${ip} \
+                  racadm set idrac.ntpconfiggroup.ntp1 ${ntp_server1} \
+                  2>&1
+            )
+        }
+
+    [[ ${ntp_server2+x} == x ]] \
+        && {
+            mapfile cout2 < <(
+               SSHPASS=${idrac_pass} ${ssh_cmd} ${ip} \
+                  racadm set idrac.ntpconfiggroup.ntp2 ${ntp_server2} \
+                  2>&1
+            )
+        }
+
+    [[ ${ntp_server3+x} == x ]] \
+        && {
+            mapfile cout3 < <(
+               SSHPASS=${idrac_pass} ${ssh_cmd} ${ip} \
+                  racadm set idrac.ntpconfiggroup.ntp3 ${ntp_server3} \
+                  2>&1
+            )
+        }
+
+    cout=( "${cout1[@]}" "${cout2[@]}" "${cout3[@]}" )
+
+    debug_print ${FUNCNAME} cout
+}
+

@@ -1,0 +1,30 @@
+vflash_set() {
+    local DESCRIPTION="Enables or disables the vFlash device"
+    local OPTIONS="(help | idrac_ip {enable|disable})"
+    local RETURNS=""
+
+    [[ ${1} == help ]] \
+        && {
+            _show_help "${FUNCNAME}" "${DESCRIPTION}" "${OPTIONS}" "${RETURNS}"
+            return 0
+        }
+
+
+
+    local ip=$1
+    local value
+    local cout
+    local line
+
+    [[ ${2,,} =~ enable ]] && value=1 || value=0
+
+    mapfile cout < <(
+        SSHPASS=${idrac_pass} ${ssh_cmd} ${ip} \
+            racadm set iDRAC.vFlashSD.Enable ${value} \
+            2>&1
+        )
+
+    debug_print ${FUNCNAME} cout
+
+#    vflash_state ${ip}
+}

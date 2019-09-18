@@ -1,0 +1,51 @@
+update_partition() {
+    local DESCRIPTION="update the vFlash partition"
+    local OPTIONS="(help | idrac_ip vflash_partition_number vflash_partition_name url_to_iso)"
+    local RETURNS=""
+
+    [[ ${1} == help ]] \
+        && {
+            _show_help "${FUNCNAME}" "${DESCRIPTION}" "${OPTIONS}" "${RETURNS}"
+            return 0
+        }
+
+
+    local ip=$1
+    local partition_number=$2
+    local partition_name=$3
+    local iso_url=$4
+
+
+    echo "  -- Checking if the vFlash device is enabled"
+    [[ $( vflash_state ${ip} ) =~ Disabled ]] \
+        && {
+        echo "     - Enabling the vFlash device"
+        vflash_set ${ip} enable
+
+        [[ $( vflash_state ${ip} ) =~ Disabled ]] \
+            && {
+                echo "     - ERROR: Could not Enable vFlash"
+                exit 1
+            }
+        }
+
+
+    echo "  -- Initializing and wiping the vFlash device"
+    [[ $( vflash_initialize ${ip} ) =~ Error ]] \
+        && {
+            echo "     - Failed to initialize the vFlash device"
+            exit 1
+        } || {
+            [[ $( vflash_initialize_wait ${ip} ) =~ Timeout ]] \
+                && {
+                    echo "     - Timed out initializing the vFlash device"
+                    exit 1
+                }
+        }
+
+    sitnwait 10
+
+    echo "  -- Creating the vFlash partition"
+    vflash_partition_create ${ip} ${partition_number} ${partition_name} ${iso_url}
+}
+

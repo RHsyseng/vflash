@@ -1,0 +1,31 @@
+vflash_partition_delete() {
+    local DESCRIPTION="deletes a partition on the vFlash device"
+    local OPTIONS="(help | idrac_ip vflash_partition_number vflash_partition_name url_to_iso)"
+    local RETURNS=""
+
+    [[ ${1} == help ]] \
+        && {
+            _show_help "${FUNCNAME}" "${DESCRIPTION}" "${OPTIONS}" "${RETURNS}"
+            return 0
+        }
+
+
+
+    local ip=$1
+    local partition=$2
+    local partition_name=$3
+    local iso=$4
+    local cout
+    local line
+
+    mapfile cout < <(
+        SSHPASS=${idrac_pass} ${ssh_cmd} ${ip} \
+            racadm vflashpartition delete \
+            -i ${partition}
+            2>&1
+        )
+
+    debug_print ${FUNCNAME} cout ${status}
+
+#    vflash_partition_wait ${ip} ${partition}
+}

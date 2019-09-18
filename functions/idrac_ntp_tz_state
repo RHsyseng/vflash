@@ -1,0 +1,27 @@
+idrac_ntp_tz_state() {
+    local DESCRIPTION="Checks the timezone of the iDRAC"
+    local OPTIONS="(help | idrac_ip)"
+    local RETURNS="timzone setting"
+
+    [[ ${1} == help ]] \
+        && {
+            _show_help "${FUNCNAME}" "${DESCRIPTION}" "${OPTIONS}" "${RETURNS}"
+            return 0
+        }
+
+    local ip=$1
+    local cout
+    local line
+
+
+    mapfile cout < <(
+        SSHPASS=${idrac_pass} ${ssh_cmd} ${ip} \
+            racadm get idrac.time.timezone \
+            2>&1
+        )
+    status=$( echo "${cout[@]}" | sed -n -e 's/.*Timezone=\(.*\)$/\1/p' )
+
+    debug_print ${FUNCNAME} cout ${status}
+
+    echo ${status}
+}

@@ -1,0 +1,49 @@
+job_wait() {
+    local DESCRIPTION="Waits for the specfied job to be created"
+    local OPTIONS="(help | idrac_ip job_id [timeout])"
+    local RETURNS="Complete | Timeout"
+
+    [[ ${1} == help ]] \
+        && {
+            _show_help "${FUNCNAME}" "${DESCRIPTION}" "${OPTIONS}" "${RETURNS}"
+            return 0
+        }
+
+
+
+    local ip=$1
+    local jid=$2
+    local timeout=$3 # set this to a default value if not set
+    : ${timeout:=900}
+
+    local status
+    local start_time
+    local cout
+    local line
+
+    [[ ${2:-x} == x ]] && return 1
+
+    until [[ ${status,,} =~ "complete" || ${status,,} =~ "timeout" ]]
+    do
+        sleep 5
+
+        : ${start_time:=$(date +%s)}
+
+        mapfile cout < <(
+            SSHPASS=${idrac_pass} ${ssh_cmd} ${ip} \
+                racadm jobqueue view -i ${jid} \
+                2>&1
+        )
+
+        status=$( echo "${cout[@]}" | sed -n -e 's/.*Message=.*: \(.*\)\..*/\1/p' )
+
+
+        [[ $(date +%s) -ge $(( ${start_time} + ${timeout} )) ]] \
+            && status="Timeout"
+
+        debug_print ${FUNCNAME} cout ${status}
+
+    done
+
+    echo ${status}
+}

@@ -1,0 +1,44 @@
+vflash_initialize_wait() {
+    local DESCRIPTION="waits for the vFlash to finish initializing"
+    local OPTIONS="(help | idrac_ip)"
+    local RETURNS="Initialized | Timeout"
+
+    [[ ${1} == help ]] \
+        && {
+            _show_help "${FUNCNAME}" "${DESCRIPTION}" "${OPTIONS}" "${RETURNS}"
+            return 0
+        }
+
+
+
+    local ip=$1
+    local status
+    local start_time
+    local cout
+    local line
+
+    until [[ ${status,,} =~ "initialized" || ${status,,} =~ "timeout" ]]
+    do
+        : ${start_time:=$(date +%s)}
+
+        mapfile cout < <( 
+            SSHPASS=${idrac_pass} ${ssh_cmd} ${ip} \
+                racadm get iDRAC.vFlashSD.Initialized \
+                2> /tmp/err.$$
+            )
+        status=$( echo ${cout[@]} | sed -n -e 's/.*Initialized=\(.*\)$/\1/p' )
+
+        mapfile cerr < /tmp/err.$$
+
+        rm /tmp/err.$$
+
+
+        [[ $(date +%s) -ge $(( ${start_time} + 30 )) ]] \
+            && status="Timeout"
+
+        debug_print ${FUNCNAME} cout ${status} cerr
+
+    done
+
+    echo ${status}
+}

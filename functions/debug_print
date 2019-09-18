@@ -1,0 +1,67 @@
+
+debug_print() {
+    local DESCRIPTION="Prints to the DEBUG file if it is set"
+    local OPTIONS="(help | function_name stdout_array status_string stderr_array )"
+    local RETURNS=""
+
+    [[ ${1} == help ]] \
+        && {
+            _show_help "${FUNCNAME}" "${DESCRIPTION}" "${OPTIONS}" "${RETURNS}"
+            return 0
+        }
+
+
+    [[ ${1+x} ]] && local    fname=$1
+    [[ ${2+x} ]] && local -n out_array=$2
+    [[ ${3+x} ]] && local    status=$3
+    [[ ${4+x} ]] && local -n err_array=$4
+
+
+    [[ ${DEBUG+x} == x ]] \
+        && {
+            (
+            [[ -n ${fname} ]] \
+                && {
+                    echo "::::::::::::::::::::::::::::::::::::::::"
+                    echo "Function Name: ${fname}"
+                    echo
+                }
+
+            [[ ${#err_array[@]} -gt 0 ]] \
+                && {
+                    echo "--------------------"
+                    echo "Standard Error (stderr)"
+                    echo "-----"
+
+                    for line in "${err_array[@]}"
+                    do
+                        echo ${line}
+                    done
+                    echo
+                }
+
+            [[ ${#out_array[@]} -gt 0 ]] \
+                && {
+                    echo "--------------------"
+                    echo "Standard Out (stdout)"
+                    echo "-----"
+
+                    for line in "${out_array[@]}"
+                    do
+                        echo ${line}
+                    done
+                    echo
+                }
+
+            [[ -n ${status} ]] \
+                && {
+                    echo "--------------------"
+                    echo "Status: ${status}"
+                    echo
+                }
+
+             echo
+
+            ) >> ${DEBUG}
+        }
+}

@@ -1,0 +1,57 @@
+idrac_ntp_server_state() {
+    local DESCRIPTION="Checks the configured ntp servers"
+    local OPTIONS="(help | idrac_ip)"
+    local RETURNS="Enabled | Disabled"
+
+    [[ ${1} == help ]] \
+        && {
+            _show_help "${FUNCNAME}" "${DESCRIPTION}" "${OPTIONS}" "${RETURNS}"
+            return 0
+        }
+
+    local ip=$1
+    local cout
+    local cout1
+    local cout2
+    local cout3
+    local line
+    local ntp1
+    local ntp2
+    local ntp3
+
+
+    mapfile cout1 < <(
+        SSHPASS=${idrac_pass} ${ssh_cmd} ${ip} \
+            racadm get idrac.ntpconfiggroup.ntp1 \
+            2>&1
+        )
+
+    mapfile cout2 < <(
+        SSHPASS=${idrac_pass} ${ssh_cmd} ${ip} \
+            racadm get idrac.ntpconfiggroup.ntp2 \
+            2>&1
+        )
+
+    mapfile cout3 < <(
+        SSHPASS=${idrac_pass} ${ssh_cmd} ${ip} \
+            racadm get idrac.ntpconfiggroup.ntp3 \
+            2>&1
+        )
+
+
+    ntp1=$( echo "${cout1[@]}" | sed -n -e 's/.*NTP.=\(.*\)$/\1/p' )
+    ntp2=$( echo "${cout2[@]}" | sed -n -e 's/.*NTP.=\(.*\)$/\1/p' )
+    ntp3=$( echo "${cout3[@]}" | sed -n -e 's/.*NTP.=\(.*\)$/\1/p' )
+
+    [[ ${ntp1+x} != x || -z ${ntp1} ]] && ntp1=empty
+    [[ ${ntp2+x} != x || -z ${ntp2} ]] && ntp2=empty
+    [[ ${ntp3+x} != x || -z ${ntp3} ]] && ntp3=empty
+    
+    status="${ntp1} ${ntp2} ${ntp3}"
+
+    cout=( "${cout1[@]}" "${cout2[@]}" "${cout3[@]}" )
+
+    debug_print ${FUNCNAME} cout ${status}
+
+    echo ${status}
+}

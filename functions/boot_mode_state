@@ -1,0 +1,30 @@
+boot_mode_state() {
+    local DESCRIPTION="Checks the current boot mode defined in the Bios"
+    local OPTIONS="(help | idrac_ip)"
+    local RETURNS="Bios | Uefi"
+
+    [[ ${1} == help ]] \
+        && {
+            _show_help "${FUNCNAME}" "${DESCRIPTION}" "${OPTIONS}" "${RETURNS}"
+            return 0
+        }
+
+
+
+    local ip=$1
+    local cout
+    local line
+    local mode
+
+    mapfile cout < <(
+        SSHPASS=${idrac_pass} ${ssh_cmd} ${ip} \
+            racadm get bios.biosbootsettings.bootmode \
+            2>&1
+        )
+
+    mode=$( echo "${cout[@]}" | sed -n -e 's/.*bootmode=\(.*\)/\1/p' )
+
+    echo ${mode}
+
+    debug_print ${FUNCNAME} cout ${mode}
+}

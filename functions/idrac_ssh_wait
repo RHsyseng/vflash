@@ -1,0 +1,47 @@
+idrac_ssh_wait() {
+    local DESCRIPTION="Wait for the iDRAC to start accepting ssh connections"
+    local OPTIONS="(help | idrac_ip)"
+    local RETURNS="Accepting | Timeout"
+
+    [[ ${1} == help ]] \
+        && {
+            _show_help "${FUNCNAME}" "${DESCRIPTION}" "${OPTIONS}" "${RETURNS}"
+            return 0
+        }
+
+
+
+    local ip=$1
+    local timeout=$2 # make this use a default if not specified
+    : ${timeout:=600}
+
+    local status
+    local start_time
+    local cout
+    local line
+
+    until [[ ${status,,} =~ "servicetag" || ${status,,} =~ "timeout" ]]
+    do
+        sleep 30
+
+        : ${start_time:=$(date +%s)}
+
+        mapfile cout < <(
+            SSHPASS=${idrac_pass} ${ssh_cmd} ${ip} \
+                racadm get system.serverinfo.servicetag \
+                2>&1
+            )
+
+        status=$( echo "${cout[@]}" | sed -n -e '/.*ServiceTag=/p' )
+
+        [[ $(date +%s) -ge $(( ${start_time} + ${timeout} )) ]] \
+            && status="Timeout"
+
+        debug_print ${FUNCNAME} cout ${status}
+
+    done
+
+    [[ ${status,,} != timeout ]] && status=Accepting
+
+    echo ${status}
+}

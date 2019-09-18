@@ -1,0 +1,35 @@
+ssh_state() {
+    local DESCRIPTION="Checks if ssh is enabled to the iDRAC"
+    local OPTIONS="(help | idrac_ip)"
+    local RETURNS="Enabled | Disabled"
+
+    [[ ${1} == help ]] \
+        && {
+            _show_help "${FUNCNAME}" "${DESCRIPTION}" "${OPTIONS}" "${RETURNS}"
+            return 0
+        }
+
+
+
+    local ip=$1
+    local cout
+    local cerr
+    local state
+
+
+    mapfile cout < <(
+        ${curl_cmd} https://${ip}/redfish/v1/Managers/iDRAC.Embedded.1/Attributes \
+            2>/tmp/err.$$
+        )
+
+    mapfile cerr < /tmp/err.$$
+
+    rm /tmp/err.$$
+
+
+
+    state=$( _json_parse cout "['Attributes']['SSH.1.Enable']" )
+    echo ${state}
+
+    debug_print ${FUNCNAME} cout ${state} cerr
+}

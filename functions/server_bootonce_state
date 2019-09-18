@@ -1,0 +1,30 @@
+server_bootonce_state() {
+    local DESCRIPTION="Get the setting of the boot once flag"
+    local OPTIONS="(help | idrac_ip)"
+    local RETURNS="Enabled | Disabled"
+
+    [[ ${1} == help ]] \
+        && {
+            _show_help "${FUNCNAME}" "${DESCRIPTION}" "${OPTIONS}" "${RETURNS}"
+            return 0
+        }
+
+
+
+    local ip=$1
+    local cout
+    local line
+    local status
+
+    mapfile cout < <(
+        SSHPASS=${idrac_pass} ${ssh_cmd} ${ip} \
+            racadm get idrac.serverboot.bootonce \
+            2>&1
+        )
+
+    status=$( echo "${cout[@]}" | sed -n -e 's/.*BootOnce=\(.*\)$/\1/p' )
+
+    debug_print ${FUNCNAME} cout ${status}
+
+    echo ${status}
+}

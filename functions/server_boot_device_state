@@ -1,0 +1,30 @@
+server_boot_device_state() {
+    local DESCRIPTION="Get the name of the first boot device"
+    local OPTIONS="(help | idrac_ip)"
+    local RETURNS="the first boot device"
+
+    [[ ${1} == help ]] \
+        && {
+            _show_help "${FUNCNAME}" "${DESCRIPTION}" "${OPTIONS}" "${RETURNS}"
+            return 0
+        }
+
+
+
+    local ip=$1
+    local cout
+    local line
+    local boot_device
+
+    mapfile cout < <(
+        SSHPASS=${idrac_pass} ${ssh_cmd} ${ip} \
+            racadm get idrac.serverboot.firstbootdevice \
+            2>&1
+        )
+    
+    boot_device=$( echo "${cout[@]}" | sed -n -e 's/.*FirstBootDevice=\(.*\)$/\1/p' )
+
+    debug_print ${FUNCNAME} cout ${boot_device}
+
+    echo ${boot_device}
+}

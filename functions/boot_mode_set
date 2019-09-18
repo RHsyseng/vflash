@@ -1,0 +1,41 @@
+boot_mode_set() {
+    local DESCRIPTION="Sets the bios boot mode to either Uefi or Bios"
+    local OPTIONS="(help | idrac_ip (bios | uefi))"
+    local RETURNS="Successfully | Unchanged"
+
+    [[ ${1} == help ]] \
+        && {
+            _show_help "${FUNCNAME}" "${DESCRIPTION}" "${OPTIONS}" "${RETURNS}"
+            return 0
+        }
+
+
+    local ip=$1
+    local mode=${2,,}
+    local cout
+    local line
+    local status
+
+    [[ ${mode} == bios || ${mode} == uefi ]] \
+        || return 1
+
+    cstate=$( boot_mode_state ${ip} )
+
+    [[ ${cstate,,} != ${mode,,} ]] \
+        && {
+            mapfile cout < <(
+                SSHPASS=${idrac_pass} ${ssh_cmd} ${ip} \
+                    racadm set bios.biosbootsettings.bootmode ${mode^} \
+                    2>&1
+            )
+
+            status=$( echo "${cout[@]}" | sed -n -e 's/.*\(Successfully\).*$/success/p' )
+        }
+
+    : ${status:=Unchanged}
+
+    echo ${status}
+
+    debug_print ${FUNCNAME} cout ${status}
+
+}

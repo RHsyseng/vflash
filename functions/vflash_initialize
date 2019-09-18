@@ -1,0 +1,35 @@
+vflash_initialize() {
+    local DESCRIPTION="Initializes the vFlash device, wiping all data from the vFlash"
+    local OPTIONS="(help | idrac_ip)"
+    local RETURNS="Initializing | Error"
+
+    [[ ${1} == help ]] \
+        && {
+            _show_help "${FUNCNAME}" "${DESCRIPTION}" "${OPTIONS}" "${RETURNS}"
+            return 0
+        }
+
+
+
+    local ip=$1
+    local status
+    local start_time
+    local cout
+    local line
+    local statout
+
+    mapfile cout < <(
+        SSHPASS=${idrac_pass} ${ssh_cmd} ${ip} \
+            racadm vflashsd initialize \
+            2>&1
+        )
+  
+
+    [[ ${cout[@],,} =~ error ]] \
+        && status="Error" \
+        || status="Initializing"
+
+    debug_print ${FUNCNAME} cout ${status}
+
+    echo ${status}
+}

@@ -1,0 +1,120 @@
+prepare_idrac() {
+    local DESCRIPTION="Configure the iDRAC"
+    local OPTIONS="(help | idrac_ip"
+    local RETURNS=""
+
+    [[ ${1} == help ]] \
+        && {
+            _show_help "${FUNCNAME}" "${DESCRIPTION}" "${OPTIONS}" "${RETURNS}"
+            return 0
+        }
+
+    local ip=$1
+
+
+    echo "Configuring ${ip}"
+    echo "  -- Checking if SSH is enabled to the iDRAC"
+    [[ $( ssh_state $1 ) =~ Disabled ]] \
+        && {
+        echo "     - Enabling SSH"
+        [[ $( ssh_set ${ip} enabled ) =~ successful ]] \
+            && {
+                 echo "     - Successfully enabled ssh"
+            } || {
+                 echo "     - Failed enabled ssh"
+                 exit 1
+            }
+
+        sitnwait 20
+    }
+
+    echo "  -- Changing the iDRAC password"
+    [[ ${idrac_pass_new+x} != x ]] \
+        && {
+            read -s -p "Enter the new password for the iDRAC: " idrac_pass_new
+        }   
+    [[ $( idrac_password_set ${ip} ${idrac_uid} "${idrac_pass_new}" ) =~ success ]] \
+        && {
+            echo "    - Password set"
+            idrac_pass=idrac_pass_new
+        } || {
+            echo "    - Failed setting password"
+            exit 1
+        }
+
+
+    echo "  -- Checking if the boot mode is set to Bios"
+    [[ ! $( boot_mode_state ${ip} ) =~ Bios ]] \
+        && {
+        echo "     - Setting the boot mode to Bios"
+        [[ $( boot_mode_set ${ip} bios) =~ success ]] \
+            && {
+                 echo "     - Boot mode set"
+            } || {
+                 echo "     - Failed setting boot mode"
+                 exit 1
+            }
+
+
+        echo "     - Creating a configuration job"
+        job_id=$( job_create ${ip} bios.setup.1-1 )
+
+        echo "     - Power cycling server to run job"
+        [[ $( server_power_cycle ${ip} ) =~ success ]] \
+            && {
+                 echo "     - Power cycle initiated"
+            } || {
+                 echo "     - Failed power cycle"
+                 exit 1
+            }
+
+        echo "     - Waiting for job to complete"
+        [[ $( job_wait ${ip} ${job_id}) =~ successfully ]] \
+            && {
+                 echo "     - job completed succesfully"
+            } || {
+                 echo "     - job failed"
+                 exit 1
+            }
+    }
+
+
+    echo "  -- Checking if NTP is enabled on the iDRAC"
+    [[ $( idrac_ntp_state ${ip} ) =~ Disabled ]] \
+        && {
+            echo "  -- Enabling NTP on the iDRAC"
+            idrac_ntp_set ${ip} enable
+
+            [[ $( idrac_ntp_state ${ip} ) =~ Disabled ]] \
+                && {
+                    echo "     - ERROR: Could not enable NTP"
+                    exit 1
+                }
+        }
+
+    echo "  -- Setting the NTP servers on the iDRAC"
+    idrac_ntp_server_set ${ip} ${ntp1} ${ntp2} ${ntp3}
+    nset=$( idrac_ntp_server_state ${ip} )
+
+    [[ ${nset} =~ ${ntp1} ]] \
+        && [[ ${nset} =~ ${ntp2} ]] \
+        && [[ ${nset} =~ ${ntp3} ]] \
+        && {
+            echo "    - Ntp servers set"
+        } || {
+            echo "    - Failed setting ntp servers"
+            exit 1
+        }
+
+
+    echo "  -- Setting the timezone on the iDRAC"
+    idrac_ntp_tz_set ${ip} ${timezone}
+
+    [[ $( idrac_ntp_tz_state ${ip} ) =~ ${timezone} ]] \\
+        && {
+            echo "    - Timezone set to ${timezone}"
+        } || {
+            echo "    - Failed setting the timezone"
+            exit 1
+        }
+}

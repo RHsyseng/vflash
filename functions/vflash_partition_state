@@ -1,0 +1,31 @@
+vflash_partition_state() {
+    local DESCRIPTION="Checks if the vFlash partition is attached to the server"
+    local OPTIONS="(help | idrac_ip flash_partition_number)"
+    local RETURNS="Attached | Detached"
+
+    [[ ${1} == help ]] \
+        && {
+            _show_help "${FUNCNAME}" "${DESCRIPTION}" "${OPTIONS}" "${RETURNS}"
+            return 0
+        }
+
+
+
+    local ip=$1
+    local partition=$2
+    local cout
+    local line
+    local state
+
+    mapfile cout < <(
+    SSHPASS=${idrac_pass} ${ssh_cmd} ${ip} \
+        racadm get iDRAC.vFlashpartition.${partition}.attachstate \
+        2>&1
+        )
+
+    state=$( echo "${cout[@]}" | sed -n -e 's/.*AttachState=\(.*\)$/\1/p' )
+
+    debug_print ${FUNCNAME} cout ${state}
+
+    echo ${state}
+}

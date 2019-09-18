@@ -1,0 +1,30 @@
+server_power_cycle() {
+    local DESCRIPTION="Power cycle the server to reboot and begin the installation process"
+    local OPTIONS="(help | idrac_ip)"
+    local RETURNS="success"
+
+    [[ ${1} == help ]] \
+        && {
+            _show_help "${FUNCNAME}" "${DESCRIPTION}" "${OPTIONS}" "${RETURNS}"
+            return 0
+        }
+
+
+
+    local ip=$1
+    local cout
+    local line
+    local status
+
+    mapfile cout < <(
+        SSHPASS=${idrac_pass} ${ssh_cmd} ${ip} \
+            racadm serveraction powercycle \
+            2>&1
+        )
+
+    status=$( echo "${cout[@]}" | sed -n -e 's/.*\(success\).*$/\1/p' )
+
+    debug_print ${FUNCNAME} cout ${status}
+
+    echo ${status}
+}

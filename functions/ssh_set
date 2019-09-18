@@ -1,0 +1,40 @@
+ssh_set() {
+    local DESCRIPTION="enables or disables ssh to the iDRAC"
+    local OPTIONS="(help | idrac_ip {enabled|disabled})"
+    local RETURNS="status from the iDRAC"
+
+    [[ ${1} == help ]] \
+        && {
+            _show_help "${FUNCNAME}" "${DESCRIPTION}" "${OPTIONS}" "${RETURNS}"
+            return 0
+        }
+
+
+
+    local ip=$1
+    local state=${2:-enabled}
+    local cout
+    local cerr
+
+    [[ ${state,,} == enabled ]] || [[ ${state,,} == disabled ]] \
+        && {
+            mapfile cout < <(
+                ${curl_cmd} \
+                    https://${ip}/redfish/v1/Managers/iDRAC.Embedded.1/Attributes \
+                    -X PATCH \
+                    -d "{ \"Attributes\": { \"SSH.1.Enable\": \"${state^}\" }}" \
+                    -H "Content-Type: application/json" \
+                    2>/tmp/err.$$
+                )
+
+            mapfile cerr < /tmp/err.$$
+
+            rm /tmp/err.$$
+
+            status=$( _json_parse cout "['@Message.ExtendedInfo'][1]['Message']" )
+
+            echo ${status}
+           }
+
+    debug_print ${FUNCNAME} cout ${status} cerr
+}
