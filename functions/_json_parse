@@ -2,5 +2,5 @@ _json_parse() {
     local -n data=$1
     local    element=$2
 
-    echo ${data[@]} | python -c "import sys, json; print json.load(sys.stdin)${element}" 2>/dev/null
+    echo ${data[@]} | python3 -c "import sys, json; print ( json.load(sys.stdin)${element})" 2>/dev/null
 }

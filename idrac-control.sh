@@ -10,8 +10,10 @@ _usage() {
     echo "      options:"
     echo "           -c file          Configuration file to use"
     echo "           -a action        Special predefined actions. Commands will not be run."
-    echo "                              fresh     perform a fresh install of a sytem"
-    echo "                              upgrade   upgrade the image on the vFlash device"
+    echo "                              fresh      perform a fresh install of a sytem"
+    echo "                              upgrade    upgrade the image on the vFlash device"
+    echo "                              reinstall  reinstalls the system from the image "
+    echo "                                           on the vFlash device"
     echo "           -i fqdn          IP address or FQDN of the iDRAC(s)"
     echo "                              Can be specified multiple times"
     echo "           -p               Prompt for the iDRAC password"
@@ -90,7 +92,7 @@ do
             ;;
 
         a)
-            [[ ${OPTARG} == fresh || ${OPTARG} == update ]] \
+            [[ ${OPTARG} == fresh || ${OPTARG} == update || ${OPTARG} == reinstall ]] \
                 && action=${OPTARG}
             ;;
 
@@ -137,8 +139,12 @@ DASHCMDS=true
 
 [[ ${list_commands+x} == x ]] \
     && {
+#        echo "Execute the following commands with the help option to see their usage"
+#        echo "example:  $0 \"idrac-ntp-server-state help\""
+
         while read cmd
         do
+#            echo ${cmd//-/_}
             ${cmd//-/_} help
         done < <( declare -F | sed -n -e '/-fx/!{s/^declare.* //p}' | sed -n -e '/^_/!p' )
     }
@@ -186,7 +192,7 @@ default_vflash_partition_name=BSTRAP
 default_timezone=UTC
 
 
-# Set values for neede variables
+# Set values for needed variables
 : ${idrac_user:=$default_idrac_user}
 : ${idrac_pass:=$default_idrac_pass}
 : ${idrac_uid:=$default_idrac_uid}
@@ -221,24 +227,43 @@ empty_array=()
 
 for ip in "${idrac_ips[@]}"
 do
-    echo "-- Executing commands on ${ip}"
+    echo "Executing commands on ${ip}"
 
     case "${action}" in
         fresh)
-            echo "-- Performing a fresh installation"
-            echo "  - Configuring the iDRAC"
+            echo "Performing a fresh installation"
+            echo "-- Configuring the iDRAC"
             prepare_idrac ${ip}
 
-            echo "  - Creating the vFlash partition"
+#            echo "  -- Changing the iDRAC password"
+#            [[ ${idrac_pass_new+x} != x ]] \
+#                && {
+#                    read -s -p "Enter the new password for the iDRAC: " idrac_pass_new
+#                }
+#            [[ $( idrac_password_set ${ip} ${idrac_uid} "${idrac_pass_new}" ) =~ success ]] \
+#                && {
+#                    echo "    - Password set"
+#                    idrac_pass=idrac_pass_new
+#                } || {
+#                    echo "    - Failed setting password"
+#                    exit 1
+#                }
+
+            echo "-- Configuring the vFlash partition"
             update_partition ${ip} ${vflash_partition} ${vflash_partition_name} ${vflash_iso}
 
-            echo "  - Starting the installation of the system"
+            echo "-- Starting the installation of the system"
             install_system ${ip} ${vflash_partition} ${vflash_partition_name} ${vflash_iso}
             ;;
 
         update)
             echo "-- Updating the vFlash partition"
             update_partition ${ip} ${vflash_partition} ${vflash_partition_name} ${vflash_iso}
+            ;;
+
+        reinstall)
+            echo "-- Reinstalling the system"
+            install_system ${ip} ${vflash_partition} ${vflash_partition_name} ${vflash_iso}
             ;;
 
         *)

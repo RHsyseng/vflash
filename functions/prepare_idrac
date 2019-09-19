@@ -28,17 +28,42 @@ prepare_idrac() {
         sitnwait 20
     }
 
-    echo "  -- Changing the iDRAC password"
-    [[ ${idrac_pass_new+x} != x ]] \
+    echo "  -- Checking if NTP is enabled on the iDRAC"
+    [[ $( idrac_ntp_state ${ip} ) =~ Disabled ]] \
         && {
-            read -s -p "Enter the new password for the iDRAC: " idrac_pass_new
-        }   
-    [[ $( idrac_password_set ${ip} ${idrac_uid} "${idrac_pass_new}" ) =~ success ]] \
+            echo "  -- Enabling NTP on the iDRAC"
+            idrac_ntp_set ${ip} enable
+
+            [[ $( idrac_ntp_state ${ip} ) =~ Disabled ]] \
+                && {
+                    echo "     - ERROR: Could not enable NTP"
+                    exit 1
+                }
+        }
+
+    echo "  -- Setting the NTP servers on the iDRAC"
+    idrac_ntp_server_set ${ip} ${ntp1} ${ntp2} ${ntp3}
+    nset=$( idrac_ntp_server_state ${ip} )
+
+    [[ ${nset} =~ ${ntp1} ]] \
+        && [[ ${nset} =~ ${ntp2} ]] \
+        && [[ ${nset} =~ ${ntp3} ]] \
         && {
-            echo "    - Password set"
-            idrac_pass=idrac_pass_new
+            echo "    - Ntp servers set"
         } || {
-            echo "    - Failed setting password"
+            echo "    - Failed setting ntp servers"
+            exit 1
+        }
+
+
+    echo "  -- Setting the timezone on the iDRAC"
+    idrac_ntp_tz_set ${ip} ${timezone}
+
+    [[ $( idrac_ntp_tz_state ${ip} ) =~ ${timezone} ]] \
+        && {
+            echo "    - Timezone set to ${timezone}"
+        } || {
+            echo "    - Failed setting the timezone"
             exit 1
         }
 
@@ -78,43 +103,4 @@ prepare_idrac() {
             }
     }
 
-
-    echo "  -- Checking if NTP is enabled on the iDRAC"
-    [[ $( idrac_ntp_state ${ip} ) =~ Disabled ]] \
-        && {
-            echo "  -- Enabling NTP on the iDRAC"
-            idrac_ntp_set ${ip} enable
-
-            [[ $( idrac_ntp_state ${ip} ) =~ Disabled ]] \
-                && {
-                    echo "     - ERROR: Could not enable NTP"
-                    exit 1
-                }
-        }
-
-    echo "  -- Setting the NTP servers on the iDRAC"
-    idrac_ntp_server_set ${ip} ${ntp1} ${ntp2} ${ntp3}
-    nset=$( idrac_ntp_server_state ${ip} )
-
-    [[ ${nset} =~ ${ntp1} ]] \
-        && [[ ${nset} =~ ${ntp2} ]] \
-        && [[ ${nset} =~ ${ntp3} ]] \
-        && {
-            echo "    - Ntp servers set"
-        } || {
-            echo "    - Failed setting ntp servers"
-            exit 1
-        }
-
-
-    echo "  -- Setting the timezone on the iDRAC"
-    idrac_ntp_tz_set ${ip} ${timezone}
-
-    [[ $( idrac_ntp_tz_state ${ip} ) =~ ${timezone} ]] \\
-        && {
-            echo "    - Timezone set to ${timezone}"
-        } || {
-            echo "    - Failed setting the timezone"
-            exit 1
-        }
 }

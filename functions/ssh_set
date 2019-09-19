@@ -31,7 +31,8 @@ ssh_set() {
 
             rm /tmp/err.$$
 
-            status=$( _json_parse cout "['@Message.ExtendedInfo'][1]['Message']" )
+            status=$( echo ${cout[@]} | python3 -c "import sys, json; print ( json.load(sys.stdin) ['@Message.ExtendedInfo'][1]['Message'])" )
+
 
             echo ${status}
            }

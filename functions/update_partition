@@ -29,8 +29,20 @@ update_partition() {
             }
         }
 
+    echo "  -- Checking if partition is attached"
+    [[ $( vflash_partition_state ${ip} ${partition_number} ) =~ Attach ]] \
+        && {
+            echo "     - Detaching partition from server"
+            vflash_partition_attach ${ip} ${partition_number} detach
 
-    echo "  -- Initializing and wiping the vFlash device"
+            [[ $( vflash_partition_state ${ip} ${partition_number} ) =~ Attach ]] \
+            && {
+                echo "     - Could not detach partition"
+                exit 1
+            }
+        }
+
+    echo "  -- Initializing the vFlash device"
     [[ $( vflash_initialize ${ip} ) =~ Error ]] \
         && {
             echo "     - Failed to initialize the vFlash device"

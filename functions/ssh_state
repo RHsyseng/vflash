@@ -22,13 +22,14 @@ ssh_state() {
             2>/tmp/err.$$
         )
 
+    state=$( echo ${cout[@]} | python3 -c "import sys, json; print ( json.load(sys.stdin)['Attributes']['SSH.1.Enable'] )" )
+
     mapfile cerr < /tmp/err.$$
 
     rm /tmp/err.$$
 
 
 
-    state=$( _json_parse cout "['Attributes']['SSH.1.Enable']" )
     echo ${state}
 
     debug_print ${FUNCNAME} cout ${state} cerr
