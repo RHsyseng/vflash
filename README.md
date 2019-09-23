@@ -127,13 +127,14 @@ The `-c` option can be specified multiple times and the configuration files are 
 The `example.cfg` file lists most variables that can be changed.
 There are two that warrant more attention.
 
-| Variable  | Description |
-| --------- | --- |
-| idrac_ips | This variable is a bash array by default.
+- idrac_ips
+This variable is a bash array by default.
 It can be defined as a space seperated string if desired.
 The array contains a list of iDRAC ip addresses or resolvable names.
 If this variable is defined in the configuration file, any ip addresses specified using the -i option will be appended to the ones defined.
-| execute_commands | This variable is a bash array and must be defined as one.
+
+- execute_commands
+ This variable is a bash array and must be defined as one.
 Any command specified here will be executed sequentially.
 By creating a configuration file with commands, you can create custom actions.
 
