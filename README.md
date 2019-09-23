@@ -188,23 +188,24 @@ The script presents the function names as commands and changes the underscores t
 The script will automatically convert dashes to underscores in the function name.
 For example, `vflash-partition-status` and `vflash_partition_status` are the same command and either can be specified on the command line.
 
-The functionality of the script can be expanded simply by creating new functions. The functionsshould follow a few guidelines as follows:
+The functionality of the script can be expanded simply by creating new functions. The functions should follow a few guidelines as follows:
 
 - All variables whose values change should be declared as local variables.
 
 - The function should not print anything except the string it is returning to the screen.
- - All normal output should be captured into arrays.
- - One array can be used for both stdout and stderr or two arrays can be used to differentiate stdout and stderr.
+  - All normal output should be captured into arrays.
+  - One array can be used for both stdout and stderr or two arrays can be used to differentiate stdout and stderr.
 
 - The function should call the `_show_help` function if its first argument is 'help'.
 
-The function should call the `debug_print` function before it exits.
+- The function should call the `debug_print` function before it exits.
 
-The function can be hidden from the user when the `-l` option is specified by naming the function with an underscore as the first character.
+- Functions can be hidden from the user when the `-l` option is specified by naming the function with an underscore as the first character.
 This is useful for helper functions that should not be called directly by a user.
 
 
-Function help
+
+### Function help
 All functions that are not hidden from the user should take 'help' as a possible first argument.
 
 There is a function called _show_help. This is a hidden function and is used to present the help information on all functions.
@@ -215,7 +216,7 @@ All user visible functions should define the following local variables and then 
     local RETURNS="What does this function return if anything"
 The RETURNS variable is optional if the function does not return anything.
 
-Function debug output
+### Function debug output
 All functions should call the debug_print function to write output to the debug log.
 The debug_print functions takes up to three arguments.
 The first argument is the name of an array that contains the stdout from any commands executed.
