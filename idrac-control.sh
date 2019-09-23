@@ -5,7 +5,7 @@
 #
 _usage() { 
     echo 
-    echo "$( basename $0 ) [OPTIONS] command"
+    echo "$( basename $0 ) [OPTIONS] [\"command\" \"command\" ...]"
     echo "    where:"
     echo "      options:"
     echo "           -c file          Configuration file to use"
@@ -270,10 +270,13 @@ do
             for command in "${execute_commands[@]}"
             do
                 ccmd=${command%% *}
-                ccmd=${ccmd//-/_}
-
                 carg=${command#* }
+
+                [[ ${ccmd} == ${carg} ]] && carg=""
+
+                ccmd=${ccmd//-/_}
                 carg=${carg//%/\$}
+
                 echo "  -- Executing ${command}"
                 echo "     As: $( eval echo ${ccmd} ${carg} )"
 

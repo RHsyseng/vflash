@@ -59,5 +59,7 @@ update_partition() {
 
     echo "  -- Creating the vFlash partition"
     vflash_partition_create ${ip} ${partition_number} ${partition_name} ${iso_url}
+
+    vflash_partition_status ${ip} ${partition_number}
 }
 
