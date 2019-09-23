@@ -127,19 +127,19 @@ The `-c` option can be specified multiple times and the configuration files are 
 The `example.cfg` file lists most variables that can be changed.
 There are two that warrant more attention.
 
-- idrac_ips
+- `idrac_ips`
 This variable is a bash array by default.
 It can be defined as a space seperated string if desired.
 The array contains a list of iDRAC ip addresses or resolvable names.
 If this variable is defined in the configuration file, any ip addresses specified using the -i option will be appended to the ones defined.
 
-- execute_commands
+- `execute_commands`
  This variable is a bash array and must be defined as one.
 Any command specified here will be executed sequentially.
-By creating a configuration file with commands, you can create custom actions.
 
 
-For example, if I created two configuration files as follows:
+By creating multiple configuration files, custom actions can be created.
+For example, using two configuration files as follows:
 
 idrac.cfg
 ```
@@ -165,16 +165,17 @@ execute_commands=(
 ```
 
 
-The script could be run calling the -c option twice. This will cause the script to source both configuration files and have the execute commands run on the host specified in the idrac.cfg file.
+The script could be executed by calling the `-c` option twice.
+This will cause the script to source both configuration files and have the execute commands run on the host specified in the idrac.cfg file.
+`idrac-control.sh -c idrac.cfg -c commands.cfg`
 
 
 
 ## Debug
-The system will write debug output to a file if the DEBUG variable is set. This variable should be set to the name of the file to write the data to.
-This means that by setting this variable, there is no need to specify the -d option on the command line.
-By default the debug file is named after the script with a julian date and timestamp.
-But it can be overridden by setting DEBUG=run1.log or some other file.
-
+The system will write debug output to a file if the `DEBUG` variable is set.
+This variable should be set to the name of the file to write the data to.
+By setting this variable, there is no need to specify the `-d` option on the command line.
+The `-d` option just sets the variable to the program name followed by the julian date and time.
 
 
 
@@ -182,22 +183,24 @@ But it can be overridden by setting DEBUG=run1.log or some other file.
 The script was written to allow it to be easily expanded.
 All the commands available in the script are just the function names.
 
+The commands to the script can be specified using dashes or underscores.
 The script presents the function names as commands and changes the underscores to dashes when displaying the help.
-The commands to the script can be specified using dashes or underscores. The script will conver dashes to the underscore function name.
-For example, vflash-partition-status and vflash_partition_status are the same command and either can be specified on the command line.
+The script will automatically convert dashes to underscores in the function name.
+For example, `vflash-partition-status` and `vflash_partition_status` are the same command and either can be specified on the command line.
 
 The functionality of the script can be expanded simply by creating new functions. The functionsshould follow a few guidelines as follows:
 
-All variables whose values change should be declared as local variables.
+- All variables whose values change should be declared as local variables.
 
-The function should not print anything except the string it is returning to the screen.
-All normal output should be captured into arrays. One array can be used for both stdout and stderr or two arrays can be used to differentiate stdout and stderr.
+- The function should not print anything except the string it is returning to the screen.
+ - All normal output should be captured into arrays.
+ - One array can be used for both stdout and stderr or two arrays can be used to differentiate stdout and stderr.
 
-The function should call the _show_help function if its first argument is 'help'.
+- The function should call the `_show_help` function if its first argument is 'help'.
 
-The function should call the debug_print function before it exits.
+The function should call the `debug_print` function before it exits.
 
-The function can be hidden from the user when the -l option is specified by naming the function with an underscore as the first character.
+The function can be hidden from the user when the `-l` option is specified by naming the function with an underscore as the first character.
 This is useful for helper functions that should not be called directly by a user.
 
 
