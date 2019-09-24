@@ -208,21 +208,24 @@ This is useful for helper functions that should not be called directly by a user
 ### Function help
 All functions that are not hidden from the user should take 'help' as a possible first argument.
 
-There is a function called _show_help. This is a hidden function and is used to present the help information on all functions.
+A function called _show_help exists that will display the functions description, options it takes, and what the function returns. This is a hidden function and is used to present the functions help in a consistent format.
+
 The _show_help function should be called if the first argument to the function is 'help'.
-All user visible functions should define the following local variables and then call the _show_help function if requested.
-    local DESCRIPTION="A short description of what this function does"
-    local OPTIONS="The usage options for this function"
-    local RETURNS="What does this function return if anything"
-The RETURNS variable is optional if the function does not return anything.
+
+All user visible functions should define the following local variables and then call the `_show_help` function if requested.
+- local DESCRIPTION="A short description of what this function does"
+- local OPTIONS="The usage options for this function"
+- local RETURNS="The possible values or information returned by this function"
+  - The RETURNS variable is optional if the function does not return anything.
 
 ### Function debug output
-All functions should call the debug_print function to write output to the debug log.
+All functions should call the `debug_print` function to write output to the debug log.
+
 The debug_print functions takes up to three arguments.
-The first argument is the name of an array that contains the stdout from any commands executed.
-The second argument should be the string that is returned by the function.
-    If nothing is returned by the function, any useful string of data can be specified.
-The third argument is the name of an array that contains the stderr from any commands executed.
+- First argument is the name of an array that contains the stdout from any commands executed.
+- Second argument should be the string that is returned by the function.
+  - If nothing is returned by the function, any useful string of data can be specified.
+- Third argument is the name of an array that contains the stderr from any commands executed.
 
 Note: The first and third arguments must be array names and not data. The function takes these names as references.
 
