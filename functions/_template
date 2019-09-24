@@ -1,0 +1,27 @@
+_template() {
+    local DESCRIPTION="This is an example template for functions"
+    local OPTIONS="(help | idrac_ip)"
+    local RETURNS="Attached | Detached"
+
+    [[ ${1} == help ]] \
+        && {
+            _show_help "${FUNCNAME}" "${DESCRIPTION}" "${OPTIONS}" "${RETURNS}"
+            return 0
+        }
+
+
+
+    local ip=$1
+    local cout
+    local state
+
+    #
+    # Code goes here
+    #
+
+    state=$( echo "${cout[@]}" | sed -n -e 's/.*AttachState=\(.*\)$/\1/p' )
+
+    debug_print ${FUNCNAME} cout ${state}
+
+    echo ${state}
+}

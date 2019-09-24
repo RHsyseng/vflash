@@ -208,9 +208,9 @@ This is useful for helper functions that should not be called directly by a user
 ### Function help
 All functions that are not hidden from the user should take 'help' as a possible first argument.
 
-A function called _show_help exists that will display the functions description, options it takes, and what the function returns. This is a hidden function and is used to present the functions help in a consistent format.
+A function called `_show_help exists` that will display the functions description, options it takes, and what the function returns. This is a hidden function and is used to present the functions help in a consistent format.
 
-The _show_help function should be called if the first argument to the function is 'help'.
+The `_show_help` function should be called if the first argument to the function is 'help'.
 
 All user visible functions should define the following local variables and then call the `_show_help` function if requested.
 - local DESCRIPTION="A short description of what this function does"
@@ -221,7 +221,7 @@ All user visible functions should define the following local variables and then 
 ### Function debug output
 All functions should call the `debug_print` function to write output to the debug log.
 
-The debug_print functions takes up to three arguments.
+The `debug_print` function takes up to three arguments.
 - First argument is the name of an array that contains the stdout from any commands executed.
 - Second argument should be the string that is returned by the function.
   - If nothing is returned by the function, any useful string of data can be specified.
@@ -230,6 +230,39 @@ The debug_print functions takes up to three arguments.
 Note: The first and third arguments must be array names and not data. The function takes these names as references.
 
 
+## Function Template
+
+The following is an example template that can be used to start a function.
+
+```
+_template() {
+    local DESCRIPTION="This is an example template for functions"
+    local OPTIONS="(help | idrac_ip)"
+    local RETURNS="Attached | Detached"
+
+    [[ ${1} == help ]] \
+        && {
+            _show_help "${FUNCNAME}" "${DESCRIPTION}" "${OPTIONS}" "${RETURNS}"
+            return 0
+        }
+
+
+
+    local ip=$1
+    local cout
+    local state
+
+    #
+    # Code goes here
+    #
+
+    state=$( echo "${cout[@]}" | sed -n -e 's/.*AttachState=\(.*\)$/\1/p' )
+
+    debug_print ${FUNCNAME} cout ${state}
+
+    echo ${state}
+}
+```
 
 
 
